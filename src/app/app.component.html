@@ -104,7 +104,7 @@
     <tr style="height:50px;background-color: #262626;" *ngFor="let e of dataSource">
       <td >{{e.position}}</td>  
       <td >{{e.name}}</td>  
-      <td [ngStyle]="{'background-color': getColor(e.symbol)}" style="height:50px;color:black" >{{e.weight}}</td>  
+      <td style="height:50px" >{{e.weight}}</td>  <!--[ngStyle]="{'background-color': getColor(e.symbol)}"--> <!--;color:black-->
       <td style="background-color: #0B0C10;">  
           <!--<button mat-raised-button color="accent" style="margin: 3px;">Ja</button> -->
           <button (click)="RemoveRaider(e.name)" mat-raised-button color="warn" style="margin: 3px;color:black">Entfernen</button> 

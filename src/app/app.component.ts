@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from "@angular/common/http";
+import {OnInit, AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 
 export interface Person {
   id: Number
@@ -8,6 +8,10 @@ export interface Person {
   weight:string
   symbol:Number
 }
+
+const headers = new HttpHeaders()
+  .set('Content-Type', 'application/json')
+  .set('x-master-key', '$2b$10$V0KEZ8p2ITtuPEeslj.BE.7zP9NDvdVJahDwUMepBlVMKi5VrIm3O');
 
 @Component({
   selector: 'app-root',
@@ -21,28 +25,32 @@ export class AppComponent implements OnInit{
   plr_role: string = '';
   plr_name: string = '';
   plr_class: string = '';
+  baseUrl: string = 'https://api.jsonbin.io/v3/b/63981ce534ae3620ec2cf79f';
+  @ViewChild('rosterColor') myDiv: ElementRef | undefined;
 
   constructor(private httpClient: HttpClient) {}
 
   GetRoster(){
-    this.httpClient.get('https://localhost:7080/weatherforecast', {responseType: 'blob'})
+    this.httpClient.get(this.baseUrl, {responseType: 'blob', headers})
     .subscribe(data => {
       const reader = new FileReader();
       reader.onloadend = (e) => {
-        const readerResult = reader.result;
         if (typeof reader.result === 'string') {
-          this.dataSource = JSON.parse(reader.result);
-          console.log(this.dataSource);
+          let theValue = JSON.parse(reader.result);
+          console.log(theValue.record);
+          for (var i = 0; i < theValue.record.length; i++){
+            console.log(theValue.record[i].name);
+            this.dataSource.push({
+              name: theValue.record[i].name,
+              position: theValue.record[i].position,
+              weight: theValue.record[i].weight,
+              symbol: this.checkClassID(theValue.record[i].symbol)
+            });
+          }
         }
       };
       reader.readAsText(data, 'UTF-8');
     }, error => console.log(error));
-  }
-
-  PostRoster(){
-    this.httpClient.post<any>('https://localhost:7080/weatherforecast', this.dataSource).subscribe(data => {
-        console.log("POST");
-    })
   }
   
   ngOnInit() {
@@ -56,7 +64,9 @@ export class AppComponent implements OnInit{
       weight: this.plr_class,
       symbol: this.checkClassID(this.plr_class)
     });
-    this.PostRoster();
+    this.httpClient.put(this.baseUrl, this.dataSource, { headers: headers }).subscribe(response => {
+    // do something with the response
+    });
   }
 
   public RemoveRaider(e:string){
@@ -64,7 +74,9 @@ export class AppComponent implements OnInit{
       return object.name === e;
     });
     this.dataSource.splice(indexOfObject, 1);
-    this.PostRoster();
+    this.httpClient.put(this.baseUrl, this.dataSource, { headers: headers }).subscribe(response => {
+      // do something with the response
+      });
   }
 
   checkClassID(theClass:string){
@@ -87,6 +99,7 @@ export class AppComponent implements OnInit{
   getColor(value: number): string {
 		if (value == 0) {
       // 0 - Death Knight
+      console.log(this.myDiv?.nativeElement.innerHTML);
 			return 'RGBA(196,30,58,0.8)';
 		} else if (value == 1) {
       // 1 - Demon Hunter
